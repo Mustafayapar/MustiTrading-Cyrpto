@@ -2,11 +2,15 @@ package com.musti.controller;
 
 
 import com.musti.config.JwtProvider;
+import com.musti.modal.TwoFactorAuth;
+import com.musti.modal.TwoFactorOTP;
 import com.musti.modal.Users;
 import com.musti.repository.IUserRepository;
 import com.musti.response.AuthResponse;
 import com.musti.service.CustomeUserDetailsService;
-import io.jsonwebtoken.Jwts;
+import com.musti.service.EmailService;
+import com.musti.service.TwoFactorOtpService;
+import com.musti.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -28,6 +29,10 @@ public class AuthController {
     private IUserRepository userRepository;
     @Autowired
     private CustomeUserDetailsService customeUserDetailsService;
+    @Autowired
+    private TwoFactorOtpService twoFactorOtpService;
+    @Autowired
+    private EmailService emailService;
 
     public AuthController(IUserRepository userRepository) {
         this.userRepository = userRepository;
@@ -74,19 +79,40 @@ public class AuthController {
         String userName = user.getEmail();
         String password = user.getPassword();
 
+        Users authUser = userRepository.findByEmail(userName);
+
         Authentication auth = authenticate(userName, password);
         SecurityContextHolder.getContext().setAuthentication(auth);
-
         String jwtToken = JwtProvider.generateToken(auth);
+
+        if(user.getTwoFactorAuth().isEnabled()){
+            AuthResponse authResponse = new AuthResponse();
+            authResponse.setMessage("Two-factor authentication enabled");
+            authResponse.setTwoFactorAuthEnabled(true);
+            String otp = OtpUtils.generateOtp();
+
+            TwoFactorOTP oldTwoFactorOTP = twoFactorOtpService.findByUser(authUser.getId());
+
+            if(oldTwoFactorOTP != null){
+                twoFactorOtpService.deleteTwoFactorOtp(oldTwoFactorOTP);
+            }
+            TwoFactorOTP newTwoFactorAuth = twoFactorOtpService.createTwoFactorOtp(authUser, otp,jwtToken);
+
+            emailService.sendVerificationOtpEmail(userName, otp);
+
+            authResponse.setSession(newTwoFactorAuth.getId());
+
+            return new ResponseEntity<>(authResponse,HttpStatus.ACCEPTED);
+        }
+
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(jwtToken);
         authResponse.setStatus(true);
         authResponse.setMessage("Login success");
 
-
-
         return new ResponseEntity<>(authResponse,HttpStatus.CREATED);
     }
+
 
     private Authentication authenticate(String userName, String password) {
         UserDetails userDetails = customeUserDetailsService.loadUserByUsername(userName);
@@ -99,6 +125,20 @@ public class AuthController {
         }
 
         return new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
+
+    }
+
+    public ResponseEntity<AuthResponse> verifySigninOtp(@PathVariable String otp, @RequestParam String id) throws Exception {
+
+        TwoFactorOTP twoFactorOTP = twoFactorOtpService.findById(id);
+        if(twoFactorOtpService.verifyTwoFactorOtp(twoFactorOTP, otp)){
+            AuthResponse authResponse = new AuthResponse();
+            authResponse.setMessage("Two-factor authentication verified");
+            authResponse.setTwoFactorAuthEnabled(true);
+            authResponse.setJwt(twoFactorOTP.getJwt());
+            return new ResponseEntity<>(authResponse,HttpStatus.OK);
+        }
+        throw new Exception("invalid otp");
 
     }
 }
