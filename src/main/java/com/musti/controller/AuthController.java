@@ -2,14 +2,13 @@ package com.musti.controller;
 
 
 import com.musti.config.JwtProvider;
-import com.musti.modal.TwoFactorAuth;
 import com.musti.modal.TwoFactorOTP;
 import com.musti.modal.Users;
 import com.musti.repository.IUserRepository;
 import com.musti.response.AuthResponse;
 import com.musti.service.CustomeUserDetailsService;
 import com.musti.service.EmailService;
-import com.musti.service.TwoFactorOtpService;
+import com.musti.service.TwoFactorOtpServiceImpl;
 import com.musti.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -30,7 +29,7 @@ public class AuthController {
     @Autowired
     private CustomeUserDetailsService customeUserDetailsService;
     @Autowired
-    private TwoFactorOtpService twoFactorOtpService;
+    private TwoFactorOtpServiceImpl twoFactorOtpService;
     @Autowired
     private EmailService emailService;
 
@@ -128,7 +127,9 @@ public class AuthController {
 
     }
 
-    public ResponseEntity<AuthResponse> verifySigninOtp(@PathVariable String otp, @RequestParam String id) throws Exception {
+    @PostMapping("/two-factor/otp/{otp}")
+    public ResponseEntity<AuthResponse> verifySigninOtp(@PathVariable String otp,
+                                                        @RequestParam String id) throws Exception {
 
         TwoFactorOTP twoFactorOTP = twoFactorOtpService.findById(id);
         if(twoFactorOtpService.verifyTwoFactorOtp(twoFactorOTP, otp)){
