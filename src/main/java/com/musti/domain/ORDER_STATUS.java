@@ -1,0 +1,6 @@
+package com.musti.domain;
+
+public enum ORDER_STATUS {
+    PENDING,FILED,CABCELLED,PARTIALLY_FILLED,ERROR,SUCCESS
+
+}
