@@ -12,6 +12,8 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private double quantity;
+
     @ManyToOne
     private Coin coin;
 
