@@ -2,10 +2,7 @@ package com.musti.service;
 
 import com.musti.domain.ORDER_STATUS;
 import com.musti.domain.OrderType;
-import com.musti.modal.Coin;
-import com.musti.modal.Order;
-import com.musti.modal.OrderItem;
-import com.musti.modal.Users;
+import com.musti.modal.*;
 import com.musti.repository.IOrderItemRepository;
 import com.musti.repository.IOrderRepository;
 import jakarta.transaction.Transactional;
@@ -26,6 +23,9 @@ public class OrderServiceImpl implements IOrderService{
 
     @Autowired
     private IOrderItemRepository orderItemRepository;
+
+    @Autowired
+    private AssetServiceImpl assetService;
 
     @Override
     public Order createOrder(Users user, OrderItem orderItem, OrderType orderType) {
@@ -79,6 +79,19 @@ public class OrderServiceImpl implements IOrderService{
         order.setOrderStatus(ORDER_STATUS.SUCCESS);
         order.setOrderType(OrderType.BUY);
         Order savedOrder = orderRepository.save(order);
+
+        //create asset
+        Asset oldAsset= assetService.findAssetByUSerIdAndCoinId(order.getUser().getId(),
+                order.getOrderItem().getCoin().getId());
+
+        if (oldAsset == null) {
+            assetService.createAsset(user,orderItem.getCoin(),orderItem.getQuantity());
+        }else{
+            assetService.updateAsset(oldAsset.getId(),quantity);
+        }
+
+
+
         return savedOrder;
 
     }
@@ -88,12 +101,18 @@ public class OrderServiceImpl implements IOrderService{
             throw new Exception("quantity should be greater than 0");
         }
         double sellPrice = coin.getCurrentPrice();
-        double buyPrice = assetToSell.getPrice();
 
-        OrderItem orderItem = createOrderItem(coin, quantity, buyPrice, sellPrice);
+        Asset assetToSell = assetService.findAssetByUSerIdAndCoinId(user.getId(),coin.getId());
+        double buyPrice = assetToSell.getBuyPrice();
 
-        Order order = createOrder(user,orderItem,OrderType.SELL);
-        orderItem.setOrder(order);
+        if (assetToSell != null) {
+
+            OrderItem orderItem = createOrderItem(coin, quantity, buyPrice, sellPrice);
+
+            Order order = createOrder(user,orderItem,OrderType.SELL);
+            orderItem.setOrder(order);
+
+
 
         if (assetToSell.getQuantity()>=quantity){
             order.setOrderStatus(ORDER_STATUS.SUCCESS);
@@ -102,13 +121,19 @@ public class OrderServiceImpl implements IOrderService{
 
             walletService.payOrderPayment(order,user);
 
-            Asset updatedAsset= assetService.updateAsset(assetToSell.getId(), -quantity);
-            if (updatedAsset.getQuantity()*coin.getCurrentPrice()<=1){
+            Asset updatedAsset = assetService
+                    .updateAsset(assetToSell.getId(),-quantity);
+
+             if (updatedAsset.getQuantity()*coin.getCurrentPrice()<=1){
                 assetService.deleteAsset(updatedAsset.getId());
             }
             return savedOrder;
         }
         throw new Exception("quantity should be greater than 0");
+        }
+        else {
+            throw new Exception("asset not found");
+        }
     }
     @Override
     @Transactional
