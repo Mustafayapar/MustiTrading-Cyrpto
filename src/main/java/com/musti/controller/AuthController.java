@@ -7,7 +7,7 @@ import com.musti.modal.Users;
 import com.musti.repository.IUserRepository;
 import com.musti.response.AuthResponse;
 import com.musti.service.CustomeUserDetailsService;
-import com.musti.service.EmailService;
+import com.musti.service.EmailServiceImpl;
 import com.musti.service.TwoFactorOtpServiceImpl;
 import com.musti.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class AuthController {
     @Autowired
     private TwoFactorOtpServiceImpl twoFactorOtpService;
     @Autowired
-    private EmailService emailService;
+    private EmailServiceImpl emailService;
 
     public AuthController(IUserRepository userRepository) {
         this.userRepository = userRepository;

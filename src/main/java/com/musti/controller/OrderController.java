@@ -44,7 +44,7 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
-    @GetMapping
+    @GetMapping("/{orderId}")
     public ResponseEntity<Order> getOrderById(
             @RequestHeader("Authorization") String token,
             @PathVariable Long orderId
@@ -62,7 +62,7 @@ public class OrderController {
     }
 
 
-    @GetMapping
+    @GetMapping("")
     public ResponseEntity<List<Order>> getAllOrders(
             @RequestHeader("Authorization") String jwt,
             @RequestParam(required = false) OrderType order_type,

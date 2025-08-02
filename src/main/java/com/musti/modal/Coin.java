@@ -85,7 +85,7 @@ public class Coin {
 
     @JsonProperty("roi")
     @JsonIgnore
-    private Object roi; // null döndüğü için Object olarak bırakıldı
+    private String roi; // null döndüğü için Object olarak bırakıldı
 
     @JsonProperty("last_updated")
     private String lastUpdated;
