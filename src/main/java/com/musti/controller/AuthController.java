@@ -9,6 +9,7 @@ import com.musti.response.AuthResponse;
 import com.musti.service.CustomeUserDetailsService;
 import com.musti.service.EmailServiceImpl;
 import com.musti.service.TwoFactorOtpServiceImpl;
+import com.musti.service.WatchListServiceImpl;
 import com.musti.utils.OtpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,8 @@ public class AuthController {
     private IUserRepository userRepository;
     @Autowired
     private CustomeUserDetailsService customeUserDetailsService;
+    @Autowired
+    private WatchListServiceImpl watchListService;
     @Autowired
     private TwoFactorOtpServiceImpl twoFactorOtpService;
     @Autowired
@@ -52,6 +55,8 @@ public class AuthController {
         newUser.setPassword(user.getPassword());
         newUser.setFullName(user.getFullName());
         newUser.setPhone(user.getPhone());
+        Users savedUser =userRepository.save(newUser);
+        watchListService.createWatchlist(savedUser);
 
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 user.getEmail(),
@@ -60,7 +65,7 @@ public class AuthController {
         ) ;
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        Users savedUser =userRepository.save(newUser);
+
 
         String jwtToken = JwtProvider.generateToken(auth);
         AuthResponse authResponse = new AuthResponse();

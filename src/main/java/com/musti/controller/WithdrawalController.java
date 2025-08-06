@@ -1,14 +1,15 @@
 package com.musti.controller;
 
-import com.musti.domain.WithdrawalStatus;
-import com.musti.modal.Users;
+import com.musti.domain.WalletTransactionType;
+ import com.musti.modal.Users;
 import com.musti.modal.Wallet;
 import com.musti.modal.WalletTransaction;
 import com.musti.modal.Withdrawal;
+import com.musti.service.TransactionServiceImpl;
 import com.musti.service.UserServiceImpl;
 import com.musti.service.WalletServiceImpl;
 import com.musti.service.WithdrawalServiceImpl;
-import lombok.With;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +29,10 @@ import java.util.List;
     @Autowired
     private UserServiceImpl userService;
 
-//    @Autowired
-//    private WalletTransactionServiceImpl walletTransactionService;
+    @Autowired
+    private TransactionServiceImpl transactionService;
+
+
 
 
     @PostMapping("/api/withdrwal/{amount}")
@@ -43,7 +46,12 @@ import java.util.List;
         Withdrawal withdrawal = withdrawalService.requestWithdrawal(amount,user);
         walletService.addBalance(userWallet,-withdrawal.getAmount());
 
-//        WalletTransaction walletTransaction = walletTransactionService;
+       WalletTransaction walletTransaction = transactionService.createTransaction(
+               userWallet,
+               WalletTransactionType.WITHDRAWAL,null,
+               "bank account withdrawal",
+               withdrawal.getAmount()
+       );
 
 
         return new ResponseEntity<>(withdrawal, HttpStatus.OK);

@@ -41,6 +41,7 @@ public class PaymentServiceImpl implements IPaymentService {
         paymentOrder.setAmount(amount);
         paymentOrder.setPaymentMethod(paymentMethod);
         paymentOrder.setUser(user);
+        paymentOrder.setStatus(PaymentOrderStatus.PENDING);
 
 
         return  paymentOrderRepository.save(paymentOrder);
@@ -53,6 +54,10 @@ public class PaymentServiceImpl implements IPaymentService {
 
     @Override
     public Boolean proceedPaymentOrder(PaymentOrder paymentOrder, String paymentId) throws RazorpayException {
+
+        if (paymentOrder.getStatus()==null){
+            paymentOrder.setStatus(PaymentOrderStatus.PENDING);
+        }
 
         if(paymentOrder.getStatus().equals(PaymentOrderStatus.PENDING)){
             if (paymentOrder.getPaymentMethod().equals(PaymentMethod.RAZORPAY)){
@@ -81,7 +86,7 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public PaymentResponse createRazorpayPaymentLing(Users user, Long amount) throws RazorpayException {
+    public PaymentResponse createRazorpayPaymentLing(Users user, Long amount,Long orderId) throws RazorpayException {
 
         Long Amount = amount*100;
         try{
@@ -109,7 +114,7 @@ public class PaymentServiceImpl implements IPaymentService {
             paymentLinkRequest.put("reminder_enable", true);
 
             // Set the callback URL and method
-            paymentLinkRequest.put("callback_url", "https://localhost:5173/wallet");
+            paymentLinkRequest.put("callback_url", "https://localhost:5173/wallet?order_id="+orderId);
             paymentLinkRequest.put("callback_method", "get");
 
             //create the payment limk using the paymentlink.create() method,
