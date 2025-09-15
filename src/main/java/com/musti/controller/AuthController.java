@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/auth")
@@ -47,9 +48,18 @@ public class AuthController {
 
         Users isEmailExist = userRepository.findByEmail(user.getEmail());
         if(isEmailExist != null){
-            throw new Exception("email is already used with another account");
+            //throw new Exception("email is already used with another account");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already used with another account");
+
 
         }
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                user.getEmail(),
+                user.getPassword()
+
+        ) ;
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
         Users newUser = new Users();
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
@@ -58,16 +68,8 @@ public class AuthController {
         Users savedUser =userRepository.save(newUser);
         watchListService.createWatchlist(savedUser);
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(
-                user.getEmail(),
-                user.getPassword()
-
-        ) ;
-        SecurityContextHolder.getContext().setAuthentication(auth);
-
-
-
         String jwtToken = JwtProvider.generateToken(auth);
+
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(jwtToken);
         authResponse.setStatus(true);

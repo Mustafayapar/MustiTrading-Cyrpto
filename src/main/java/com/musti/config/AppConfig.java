@@ -1,5 +1,6 @@
 package com.musti.config;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,6 +10,9 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 public class AppConfig {
@@ -31,7 +35,32 @@ public class AppConfig {
         return http.build();
     }
 
-    private CorsConfigurationSource corsConfigurationSource() {
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+//        return new CorsConfigurationSource() {
+//            @Override
+//            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+//                CorsConfiguration corsConfiguration = new CorsConfiguration();
+//                corsConfiguration.setAllowedOrigins(
+//                        Arrays.asList(
+//                                "http://localhost:5173",
+//                                "http://localhost:3000"
+//                        )
+//                );
+//                corsConfiguration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+//                corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization","Content-Type","X-Requested-With"));
+//                corsConfiguration.setAllowCredentials(true);
+//                corsConfiguration.setExposedHeaders(Collections.singletonList("Authorization"));
+//                corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
+//                corsConfiguration.setMaxAge(3600L);
+//                return corsConfiguration;
+//            }
+//        };
+
+
+
+
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOrigin("*"); // Gerekirse domain belirt
         config.addAllowedMethod("*");
@@ -40,5 +69,6 @@ public class AppConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
+        }
+
 }

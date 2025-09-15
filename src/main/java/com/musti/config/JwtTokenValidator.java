@@ -56,7 +56,7 @@ public class JwtTokenValidator extends OncePerRequestFilter {
             }catch (Exception e) {
                 // Token geçersizse 401 dön
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid JWT token");
+                response.getWriter().write("Invalid or expired JWT token");
                 throw new RuntimeException("Invalid JWT token");
 
             }

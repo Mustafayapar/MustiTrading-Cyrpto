@@ -7,6 +7,7 @@ import com.musti.modal.Coin;
 import com.musti.repository.ICoinRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,6 +29,9 @@ public class CoinServiceImpl implements ICoinService{
 
     @Autowired
     private ObjectMapper objectMapper;
+
+//    @Value("${coingecko.api.key}")
+//    private String API_KEY;
 
     @Override
     public List<Coin> getCoins(int page) throws Exception {
@@ -86,6 +90,8 @@ public class CoinServiceImpl implements ICoinService{
         try {
 
             HttpHeaders headers = new HttpHeaders();
+//            headers.set("x-cg-demo-api-key", API_KEY);
+
             HttpEntity<String> entity = new HttpEntity<String>("parameters"+headers);
 
             ResponseEntity<String> response =restTemplate.exchange(url, HttpMethod.GET, entity, String.class);

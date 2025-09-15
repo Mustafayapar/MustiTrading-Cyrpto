@@ -22,7 +22,7 @@ public class CoinController {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @GetMapping("/getall")
+    @GetMapping("/")
     ResponseEntity<List<Coin>> getCoinList(@RequestParam(
             required = false,
             name="page") int page) throws Exception {
